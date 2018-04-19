@@ -1,0 +1,4 @@
+https://docs.microsoft.com/en-us/azure/virtual-machines/windows/attach-disk-ps
+
+
+Install-Module AzureRM.Compute -RequiredVersion 2.6.0

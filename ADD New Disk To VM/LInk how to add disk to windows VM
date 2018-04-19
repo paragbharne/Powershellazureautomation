@@ -1,0 +1,11 @@
+https://docs.microsoft.com/en-us/azure/virtual-machines/windows/attach-disk-ps
+
+
+Install-Module AzureRM.Compute -RequiredVersion 2.6.0
+
+
+$location = "location-name"
+    $scriptName = "script-name"
+    $fileName = "script-file-name"
+    Set-AzureRmVMCustomScriptExtension -ResourceGroupName $rgName -Location $locName -VMName $vmName -Name $scriptName -TypeHandlerVersion "1.4" -StorageAccountName "mystore1" -StorageAccountKey "primary-key" -FileName $fileName -ContainerName "scripts"
+
