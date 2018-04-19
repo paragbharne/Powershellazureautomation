@@ -1,0 +1,37 @@
+http://www.ryadel.com/en/install-google-chrome-with-powershell-script/
+
+$Path = $env:TEMP; $Installer = "chrome_installer.exe"; Invoke-WebRequest "http://dl.google.com/chrome/install/375.126/chrome_installer.exe" -OutFile $Path\$Installer; Start-Process -FilePath $Path\$Installer -Args "/silent /install" -Verb RunAs -Wait; Remove-Item $Path\$Installer
+
+
+$Path = $env:TEMP; $Installer = "LibreOffice_5.4.0_Win_x86.msi"; Invoke-WebRequest "https://www.libreoffice.org/donate/dl/win-x86/5.4.0/en-US/LibreOffice_5.4.0_Win_x86.msi" -OutFile $Path\$Installer; Start-Process -FilePath $Path\$Installer -Args "/silent /install" -Verb RunAs -Wait; Remove-Item $Path\$Installer
+
+
+$Path = $env:TEMP; $Installer = "LibreOffice_5.4.0_Win_x86.msi"; Invoke-WebRequest "https://www.libreoffice.org/donate/dl/win-x86/5.4.0/en-US/LibreOffice_5.4.0_Win_x86.msi" -OutFile $Path\$Installer; Start-Process -FilePath $Path\$Installer /qn -Wait -Args "/silent /install" -Verb RunAs -Wait; Remove-Item $Path\$Installer
+
+Start-Process "F:\BTCE\WAF 5.0\LibreOffice_5.4.0_Win_x86.msi" /qn -Wait
+
+
+Start-Process -ArgumentList '/I F:\BTCE\WAF 5.0\LibreOffice_5.4.0_Win_x86.msi /quiet'
+
+Start-Process F:\BTCE\WAF 5.0\LibreOffice_5.4.0_Win_x86.msi '/silent' -Wait
+
+
+.\LibreOffice_5.4.0_Win_x86.msi /quiet
+
+
+LibreOffice.exe /I .\LibreOffice_5.4.0_Win_x86.msi /quiet 
+
+
+
+https://www.libreoffice.org/donate/dl/rpm-x86_64/5.4.0/en-US/LibreOffice_5.4.0_Linux_x86-64_rpm.tar.gz
+
+https://www.libreoffice.org/donate/dl/win-x86/5.4.0/en-US/LibreOffice_5.4.0_Win_x86.msi
+
+
+
+Start-Process : This command cannot be run due to the error: No application is associated with the specified file for this operation.
+At line:1 char:201
++ ... $Installer; Start-Process -FilePath $Path\$Installer -Args "/silent / ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (:) [Start-Process], InvalidOperationException
+    + FullyQualifiedErrorId : InvalidOperationException,Microsoft.PowerShell.Commands.StartProcessCommand

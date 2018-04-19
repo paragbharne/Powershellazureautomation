@@ -1,0 +1,10 @@
+New-AzureRmResourceGroup -Name BaseVM -Location "Canada Central"
+
+New-AzureRmResourceGroupDeployment -Name BaseVMDeployment -ResourceGroupName BaseVM `
+  -TemplateFile F:\BTCE\ARMtemplates\VMTemplate\template.json `
+  -TemplateParameterFile F:\BTCE\ARMtemplates\VMTemplate\parameters.json
+
+
+
+
+

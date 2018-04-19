@@ -1,0 +1,24 @@
+$connectionName = "AzureRunAsConnection"
+
+$servicePrincipalConnection = Get-AutomationConnection -Name $connectionName  
+       
+   "Logging in to Azure..."
+
+    Login-AzureRmAccount `
+        -ServicePrincipal `
+        -TenantId $servicePrincipalConnection.TenantId `
+        -ApplicationId $servicePrincipalConnection.ApplicationId `
+        -CertificateThumbprint $servicePrincipalConnection.CertificateThumbprint 
+
+$subscriptionId = '60db440f-8d85-4856-92d7-fad59376f2a7'
+
+$resourceGroupName = 'devprofling-02' 
+$location = 'Canada Central' 
+$dataDiskName = 'devprofling-02_OsDisk_1_57339f71e396444e96eac6397d56674d' 
+$snapshotName = 'ContosoMD_datadisk1_snapshot01'
+
+$disk = Get-AzureRmDisk -ResourceGroupName $resourceGroupName -DiskName $dataDiskName
+
+$snapshot =  New-AzureRmSnapshotConfig -SourceUri $disk.Id -CreateOption Copy -Location $location
+
+New-AzureRmSnapshot -Snapshot $snapshot -SnapshotName $snapshotName -ResourceGroupName $resourceGroupName
