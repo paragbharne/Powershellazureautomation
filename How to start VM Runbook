@@ -1,3 +1,34 @@
+$connectionName = "AzureRunAsConnection"
+
+#Get the connection "AzureRunAsConnection "
+
+$servicePrincipalConnection = Get-AutomationConnection -Name $connectionName  
+       
+   "Logging in to Azure..."
+
+    Login-AzureRmAccount `
+        -ServicePrincipal `
+        -TenantId $servicePrincipalConnection.TenantId `
+        -ApplicationId $servicePrincipalConnection.ApplicationId `
+        -CertificateThumbprint $servicePrincipalConnection.CertificateThumbprint 
+
+#Declaring the Dictionary object to store VM Names along with their Resource group names
+
+$VMList = @{}
+
+#Adding VMs to the VM List
+
+#Replace the VM Name and Resource Group name with your environment data
+
+$VMList.Add("profiling-01", "profiling-01")
+
+#Getting the VM object using Get-AzureRmVM and then starting the VMs
+
+$VMList.Keys | % {Get-AzureRmVM -Name $_ -ResourceGroupName $VMList.Item($_)} | Start-AzureRmVM
+
+
+##########################################################################################################################################
+
 param ( 
     [object]$WebhookData
 )
@@ -37,7 +68,6 @@ if ($WebhookData -ne $null) {
     Write-Output $WebhookBody.resourceId
     Write-Output $WebhookBody.timestamp
 
-
 $connectionName = "AzureRunAsConnection"
 
 #Get the connection "AzureRunAsConnection "
@@ -52,21 +82,20 @@ $servicePrincipalConnection = Get-AutomationConnection -Name $connectionName
         -ApplicationId $servicePrincipalConnection.ApplicationId `
         -CertificateThumbprint $servicePrincipalConnection.CertificateThumbprint 
 
-# Get the information baout the sql server and database
+#Declaring the Dictionary object to store VM Names along with their Resource group names
 
-$resourcegroupname = "siftgridenterpriseserverrgp"
-$servername = "siftgridenterpriseserver"
-$databasename = "PowerDB"
-$deleteddatabaserestorename = "PowerDB"
+$VMList = @{}
 
+#Adding VMs to the VM List
 
-# Get the details fo the deleted database
-$deleteddatabase = Get-AzureRmSqlDeletedDatabaseBackup -ResourceGroupName $resourcegroupname -ServerName $servername -DatabaseName $databasename
+#Replace the VM Name and Resource Group name with your environment data
 
-$deleteddatabase
+$VMList.Add("Test", "test-vm")
 
-# Restore database
-Restore-AzureRmSqlDatabase -FromDeletedDatabaseBackup -DeletionDate $DeletedDatabase.DeletionDate -ResourceGroupName $DeletedDatabase.ResourceGroupName -ServerName $servername -TargetDatabaseName $databasename -ResourceId $DeletedDatabase.ResourceID -ElasticPoolName "siftgridenterprise-el-pool"
+#Getting the VM object using Get-AzureRmVM and then starting the VMs
+
+$VMList.Keys | % {Get-AzureRmVM -Name $_ -ResourceGroupName $VMList.Item($_)} | Start-AzureRmVM
+
 }
 
 else 

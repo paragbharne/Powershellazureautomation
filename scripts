@@ -1,0 +1,163 @@
+http://blog.coretech.dk/jgs/azure-automation-using-webhooks-part-1-input-data/
+https://david-obrien.net/2015/05/azure-automation-webhooks/
+https://blogs.technet.microsoft.com/stefan_stranger/2017/03/18/azure-automation-runbook-webhook-lesson-learned/
+
+
+dev-ajax
+CURRENT
+233MB
+THRESHOLD
+250GB
+
+
+CURRENT
+304MB
+THRESHOLD
+2GB
+CURRENT
+464MB
+THRESHOLD
+250GB
+
+Webhook
+
+test
+https://s10events.azure-automation.net/webhooks?token=KpyHDTOLldWL98w29vm67wxaMwLpZwx4ruENIi8tJzc%3d
+
+RestoreDB
+https://s10events.azure-automation.net/webhooks?token=v7FsM2pxqTaxiBL%2fKBSCEgGctkfIop3RRp8kKDIEoz4%3d
+
+restoresqldb
+https://s10events.azure-automation.net/webhooks?token=G2WdDXOdlZ9tK%2bwy10La77yFSUSZukdvAiIjHORUNTs%3d
+https://s10events.azure-automation.net/webhooks?token=G2WdDXOdlZ9tK%2bwy10La77yFSUSZukdvAiIjHORUNTs%3d
+
+$webhookurl = 'https://s10events.azure-automation.net/webhooks?token=v7FsM2pxqTaxiBL%2fKBSCEgGctkfIop3RRp8kKDIEoz4%3d'
+
+restore
+https://s10events.azure-automation.net/webhooks?token=aiRbPf7dQeFWZ1Antb72fQ0X1Iti6KeXcnAd3EsOBwg%3d
+
+autostart
+https://s10events.azure-automation.net/webhooks?token=Lrbf9nxB2z1mqrRlGP8CYbFNgG8YAMpob7%2bjLRs%2fVZY%3d
+
+
+login-azurermaccount
+$storageAccount = "siftgridblob"
+$storageKey = "DtW51tNCStJ6tV8eVrm2EwMfydiZ/GTBvB2gN7ahbJUjUeFAwjQfCr1Ke//g6p5cDnUaivhIEndbBVgJBE/XcQ=="
+$ctx = New-AzureStorageContext –StorageAccountName $storageAccount -StorageAccountKey $storageKey
+$startTime = Get-Date
+$endTime = $startTime.AddDays(7)
+New-AzureStorageContainerSASToken -Name "projectjsonfiles" -Permission rl -StartTime $startTime -ExpiryTime $endTime -Context $ctx -FullUri   
+ 
+
+workflow RestoreDB
+{
+
+Param
+  (
+      [Parameter (Mandatory= $false)]
+      [Type] Name1 = $resourceGroup,
+
+      [Parameter (Mandatory= $false)]
+      [Type] Name2 = $resourceId
+
+      [Parameter (Mandatory= $false)]
+      [Type] Name1 = $resourceGroup,
+
+  )
+
+$connectionName = "AzureRunAsConnection"
+
+#Get the connection "AzureRunAsConnection "
+
+$servicePrincipalConnection = Get-AutomationConnection -Name $connectionName  
+       
+   "Logging in to Azure..."
+
+    Login-AzureRmAccount `
+        -ServicePrincipal `
+        -TenantId $servicePrincipalConnection.TenantId `
+        -ApplicationId $servicePrincipalConnection.ApplicationId `
+        -CertificateThumbprint $servicePrincipalConnection.CertificateThumbprint 
+
+# Get the information baout the sql server and database
+
+$resourcegroupname = "siftgridenterpriseserverrgp"
+$servername = "siftgridenterpriseserver"
+$databasename = "autoDB"
+$deleteddatabaserestorename = "autoDB"
+
+
+# Get the details fo the deleted database
+$deleteddatabase = Get-AzureRmSqlDeletedDatabaseBackup -ResourceGroupName $resourcegroupname -ServerName $servername -DatabaseName $databasename
+
+$deleteddatabase
+
+# Restore database
+Restore-AzureRmSqlDatabase -FromDeletedDatabaseBackup -DeletionDate $DeletedDatabase.DeletionDate -ResourceGroupName $DeletedDatabase.ResourceGroupName -ServerName $servername -TargetDatabaseName $databasename -ResourceId $DeletedDatabase.ResourceID -ElasticPoolName "siftgridenterprise-el-pool"
+
+}
+
+
+
+workflow RestoreDB
+{
+
+[CmdletBinding()]
+Param
+([object]$WebhookData) #this parameter name needs to be called WebHookData otherwise the webhook does not work as expected.
+$VerbosePreference = 'continue'
+
+#region Verify if Runbook is started from Webhook.
+
+# If runbook was called from Webhook, WebhookData will not be null.
+if ($WebHookData){
+
+    # Collect properties of WebhookData
+    $WebhookName     =     $WebHookData.WebhookName
+    $WebhookHeaders  =     $WebHookData.RequestHeader
+    $WebhookBody     =     $WebHookData.RequestBody
+
+    # Collect individual headers. Input converted from JSON.
+    $From = $WebhookHeaders.From
+    $Input = (ConvertFrom-Json -InputObject $WebhookBody)
+    Write-Verbose "WebhookBody: $Input"
+    Write-Output -InputObject ('Runbook started from webhook {0} by {1}.' -f $WebhookName, $From)
+}
+else
+{
+   Write-Error -Message 'Runbook was not started from Webhook' -ErrorAction stop
+}
+
+$connectionName = "AzureRunAsConnection"
+
+#Get the connection "AzureRunAsConnection "
+
+$servicePrincipalConnection = Get-AutomationConnection -Name $connectionName  
+       
+   "Logging in to Azure..."
+
+    Login-AzureRmAccount `
+        -ServicePrincipal `
+        -TenantId $servicePrincipalConnection.TenantId `
+        -ApplicationId $servicePrincipalConnection.ApplicationId `
+        -CertificateThumbprint $servicePrincipalConnection.CertificateThumbprint 
+
+# Get the information baout the sql server and database
+
+$resourcegroupname = "siftgridenterpriseserverrgp"
+$servername = "siftgridenterpriseserver"
+$databasename = "autoDB"
+$deleteddatabaserestorename = "autoDB"
+
+
+# Get the details fo the deleted database
+$deleteddatabase = Get-AzureRmSqlDeletedDatabaseBackup -ResourceGroupName $resourcegroupname -ServerName $servername -DatabaseName $databasename
+
+$deleteddatabase
+
+# Restore database
+Restore-AzureRmSqlDatabase -FromDeletedDatabaseBackup -DeletionDate $DeletedDatabase.DeletionDate -ResourceGroupName $DeletedDatabase.ResourceGroupName -ServerName $servername -TargetDatabaseName $databasename -ResourceId $DeletedDatabase.ResourceID -ElasticPoolName "siftgridenterprise-el-pool"
+
+}
+
+

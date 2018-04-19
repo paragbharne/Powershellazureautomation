@@ -1,51 +1,39 @@
-<#
-.DESCRIPTION
-This sample demonstrates how to create a Managed Disk from a VHD file. 
-Create Managed Disks from VHD files in following scenarios:
-1. Create a Managed OS Disk from a specialized VHD file. A specialized VHD is a copy of VHD from an exisitng VM that maintains the user accounts, applications and other state data from your original VM. 
-   Attach this Managed Disk as OS disk to create a new virtual machine.
-2. Create a Managed data Disk from a VHD file. Attach the Managed Disk to an existing VM or attach it as data disk to create a new virtual machine.
-.NOTES
-1. Before you use this sample, please install the latest version of Azure PowerShell from here: http://go.microsoft.com/?linkid=9811175&clcid=0x409
-2. Provide the appropriate values for each variable. Note: The angled brackets should not be included in the values you provide.
-#>
+param ( 
+    [object]$WebhookData
+)
 
-#Provide the subscription Id
-$subscriptionId = 'yourSubscriptionId'
+if ($WebhookData -ne $null) {  
+    # Collect properties of WebhookData.
+    $WebhookName    =   $WebhookData.WebhookName
+    $WebhookBody    =   $WebhookData.RequestBody
+    $WebhookHeaders =   $WebhookData.RequestHeader
+       
+    # Information on the webhook name that called This
+    Write-Output "This runbook was started from webhook $WebhookName."
+       
+    # Obtain the WebhookBody containing the AlertContext
+    $WebhookBody = (ConvertFrom-Json -InputObject $WebhookBody)
+    Write-Output "`nWEBHOOK BODY"
+    Write-Output "============="
+    Write-Output $WebhookBody
+       
+    # Obtain the AlertContext
+    $AlertContext = [object]$WebhookBody.context
 
-#Provide the name of your resource group
-$resourceGroupName ='yourResourceGroupName'
-
-#Provide the name of the Managed Disk
-$diskName = 'yourDiskName'
-
-#Provide the size of the disks in GB. It should be greater than the VHD file size.
-$diskSize = '128'
-
-#Provide the URI of the VHD file that will be used to create Managed Disk. 
-# VHD file can be deleted as soon as Managed Disk is created.
-# e.g. https://contosostorageaccount1.blob.core.windows.net/vhds/contoso-um-vm120170302230408.vhd 
-$vhdUri = 'https://contosoststorageaccount1.blob.core.windows.net/vhds/contosovhd123.vhd' 
-
-#Provide the storage type for the Managed Disk. PremiumLRS or StandardLRS.
-$accountType = 'PremiumLRS'
-
-#Provide the Azure location (e.g. westus) where Managed Disk will be located. 
-#The location should be same as the location of the storage account where VHD file is stored.
-#Get all the Azure location using command below:
-#Get-AzureRmLocation
-$location = 'westus'
-
-#Set the context to the subscription Id where Managed Disk will be created
-Select-AzureRmSubscription -SubscriptionId $SubscriptionId
-
-$diskConfig = New-AzureRmDiskConfig -AccountType $accountType  -Location $location -DiskSizeGB $diskSize -SourceUri $vhdUri -CreateOption Import
-
-#Create Managed disk
-New-AzureRmDisk -DiskName $diskName -Disk $diskConfig -ResourceGroupName $resourceGroupName
-
-
-#########################################################################################################################################
+    # Some selected AlertContext information
+    Write-Output "`nALERT CONTEXT DATA"
+    Write-Output "==================="
+    Write-Output $AlertContext.name
+    Write-Output $AlertContext.subscriptionId
+    Write-Output $AlertContext.resourceGroupName
+    Write-Output $AlertContext.resourceName
+    Write-Output $AlertContext.resourceType
+    Write-Output $AlertContext.resourceId
+    Write-Output $AlertContext.timestamp
+      
+    # Act on the AlertContext data, for example, restart the VM.
+       
+    # Authenticate to your Azure subscription using OrganizationId to be able to restart that Virtual Machine. For authenticating to Azure using Azure Active Directory, please see the blog.
 
 $connectionName = "AzureRunAsConnection"
 
@@ -61,42 +49,25 @@ $servicePrincipalConnection = Get-AutomationConnection -Name $connectionName
         -ApplicationId $servicePrincipalConnection.ApplicationId `
         -CertificateThumbprint $servicePrincipalConnection.CertificateThumbprint 
 
-#Provide the subscription Id
-$subscriptionId = 'yourSubscriptionId'
+# Get the information baout the sql server and database
 
-#Create New Resource Group for the 
-
-#Provide the name of your resource group
-$resourceGroupName ='yourResourceGroupName'
-
-#Provide the name of the Managed Disk
-$diskName = 'yourDiskName'
-
-#Provide the size of the disks in GB. It should be greater than the VHD file size.
-$diskSize = '128'
-
-#Provide the URI of the VHD file that will be used to create Managed Disk. 
-# VHD file can be deleted as soon as Managed Disk is created.
-# e.g. https://contosostorageaccount1.blob.core.windows.net/vhds/contoso-um-vm120170302230408.vhd 
-$vhdUri = 'https://contosoststorageaccount1.blob.core.windows.net/vhds/contosovhd123.vhd' 
-
-#Provide the storage type for the Managed Disk. PremiumLRS or StandardLRS.
-$accountType = 'PremiumLRS'
-
-#Provide the Azure location (e.g. westus) where Managed Disk will be located. 
-#The location should be same as the location of the storage account where VHD file is stored.
-#Get all the Azure location using command below:
-#Get-AzureRmLocation
-$location = 'westus'
-
-#Set the context to the subscription Id where Managed Disk will be created
-Select-AzureRmSubscription -SubscriptionId $SubscriptionId
-
-$diskConfig = New-AzureRmDiskConfig -AccountType $accountType  -Location $location -DiskSizeGB $diskSize -SourceUri $vhdUri -CreateOption Import
-
-#Create Managed disk
-New-AzureRmDisk -DiskName $diskName -Disk $diskConfig -ResourceGroupName $resourceGroupName
+$resourcegroupname = "siftgridenterpriseserverrgp"
+$servername = "siftgridenterpriseserver"
+$databasename = "dev-ajaxDB"
+$deleteddatabaserestorename = "dev-ajaxDB"
 
 
+# Get the details fo the deleted database
+$deleteddatabase = Get-AzureRmSqlDeletedDatabaseBackup -ResourceGroupName $resourcegroupname -ServerName $servername -DatabaseName $databasename
 
+$deleteddatabase
 
+# Restore database
+Restore-AzureRmSqlDatabase -FromDeletedDatabaseBackup -DeletionDate $DeletedDatabase.DeletionDate -ResourceGroupName $DeletedDatabase.ResourceGroupName -ServerName $servername -TargetDatabaseName $databasename -ResourceId $DeletedDatabase.ResourceID -ElasticPoolName "siftgridenterprise-el-pool"
+
+}
+
+else 
+{
+    Write-Error "This runbook is meant to only be started from a webhook." 
+}
